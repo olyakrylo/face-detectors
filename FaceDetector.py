@@ -1,7 +1,8 @@
 import cv2
 from matplotlib import pyplot as plt
 from cv2.data import haarcascades
-import numpy as np
+from imutils import face_utils
+import dlib
 
 
 class FaceDetector:
@@ -29,7 +30,7 @@ class FaceDetector:
 
         img = self.img.copy()
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.01, 4, minSize=(5, 5))
+        faces = face_cascade.detectMultiScale(gray, 1.01, 1, minSize=(1, 1))
 
         for (x, y, w, h) in faces:
             cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 5)
@@ -38,3 +39,33 @@ class FaceDetector:
                 cv2.rectangle(img, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 5)
 
         plt.imsave("result_vj.jpg", img[:, :, ::-1], format="jpg")
+
+    def sym_lines(self):
+        detector = dlib.get_frontal_face_detector()
+        predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+
+        image = self.img.copy()
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        rects = detector(gray, 1)
+
+        for (i, rect) in enumerate(rects):
+            shape = predictor(gray, rect)
+            shape = face_utils.shape_to_np(shape)
+            (x, y, w, h) = face_utils.rect_to_bb(rect)
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 1)
+
+            (x1, y1) = shape[27]
+            (x2, y2) = shape[8]
+            (x3, y3) = shape[37]
+            (x5, y5) = shape[44]
+            x4 = x2 - x1 + x3
+            y4 = y2 - y1 + y3
+            x6 = x2 - x1 + x5
+            y6 = y2 - y1 + y5
+
+            cv2.line(image, (x1, y1), (x2, y2), (0, 255, 0), 1)
+            cv2.line(image, (x3, y3), (x4, y4), (255, 0, 0), 1)
+            cv2.line(image, (x5, y5), (x6, y6), (255, 0, 0), 1)
+
+        plt.imsave("result_sym.jpg", image[:, :, ::-1], format="jpg")
